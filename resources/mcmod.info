@@ -1,0 +1,14 @@
+[
+{
+  "modid": "MobAura",
+  "name": "MobAura",
+  "description": "This mod creates an aura around you which either attacks or interacts with nearby entities, depending on your settings.",
+  "version": "2.5.0",
+  "credits": "Thebombzen",
+  "mcversion": "1.6.4",
+  "url": "http://is.gd/sWk5fi",
+  "authors": [ "Thebombzen" ],
+  "dependencies" : [ "ThebombzenAPI" ]
+}
+]
+
