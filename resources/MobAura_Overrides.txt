@@ -1,0 +1,28 @@
+# Use this file to override whether MobAura will attack a particular entity
+
+# Lines beginning with # are ignored
+
+# Config version number:
+# If this is not found or does not match the current number, MobAura will replace your config with the default one.
+R1
+
+# ==== HOW TO SPECIFY ENTITES ====
+
+# Use the entity's name, the one used in commands such as /spawnmob or @e[type=]
+# For entities from mods, ask your mod author to provide the name
+
+# =========== OVERRIDES ==========
+
+# Use
+# + name
+# to tell MobAura to always attack a particular entity. For example,
+# to tell MobAura to always attack zombies
+# even if attacking hostile mobs is off, use
+# + Zombie
+# Similarly, use
+# - name
+# to tell MobAura to never attack a particular entity. For example,
+# - Pig
+# tells MobAura to never attack pigs.
+
+# Place MobAura Overrides here (without the #) 

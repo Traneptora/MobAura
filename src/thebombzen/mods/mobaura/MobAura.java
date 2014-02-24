@@ -1,7 +1,6 @@
 package thebombzen.mods.mobaura;
 
 import java.util.ArrayDeque;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -10,7 +9,6 @@ import java.util.Map.Entry;
 import java.util.Queue;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.INpc;
@@ -21,29 +19,25 @@ import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityFireball;
 import thebombzen.mods.thebombzenapi.ThebombzenAPIBaseMod;
-import thebombzen.mods.thebombzenapi.ThebombzenAPIConfiguration;
-import thebombzen.mods.thebombzenapi.client.ThebombzenAPIConfigScreen;
-import cpw.mods.fml.common.ITickHandler;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.Mod.Instance;
-import cpw.mods.fml.common.TickType;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.TickRegistry;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
-@Mod(modid = "MobAura", name = "MobAura", version = "2.5.0", dependencies = "required-after:ThebombzenAPI")
-public class MobAura extends ThebombzenAPIBaseMod implements ITickHandler {
+@Mod(modid = "mobaura", name = "MobAura", version = "2.6.0", dependencies = "required-after:thebombzenapi", guiFactory = "thebombzen.mods.mobaura.ConfigGuiFactory")
+public class MobAura extends ThebombzenAPIBaseMod {
 
 	private long ticks = 0;
 
 	private Queue<Entity> entityQueue = new ArrayDeque<Entity>();
-
 	private Map<EntityLivingBase, Integer> hurtResistantTimes = new HashMap<EntityLivingBase, Integer>();
 
 	public static final Minecraft mc = Minecraft.getMinecraft();
@@ -63,26 +57,20 @@ public class MobAura extends ThebombzenAPIBaseMod implements ITickHandler {
 
 	public static final int FIREBALL = 8;
 	public static final int NPC = 9;
+	
+	public static final int INTERACT_TOGGLE_INDEX = ConfigOption.DEFAULT_INTERACT.getDefaultToggleIndex();
+	public static final int TOGGLE_INDEX = ConfigOption.DEFAULT_ENABLED.getDefaultToggleIndex();
 
-	@Instance(value = "MobAura")
+	@Instance("mobaura")
 	public static MobAura instance;
 	
 	public static Object autoSwitch;
 
 	private Configuration configuration;
 
-	public MobAura() {
-		configuration = new Configuration(this);
-	}
-
-	@Override
-	public void activeKeyPressed(int keyCode) {
-
-	}
-
 	public void attackEntity(Entity entity) {
-		if (isToggleEnabled(1)) {
-			mc.playerController.func_78768_b(mc.thePlayer, entity);
+		if (isToggleEnabled(INTERACT_TOGGLE_INDEX) && !(entity instanceof EntityFireball)) {
+			mc.playerController.interactWithEntitySendPacket(mc.thePlayer, entity);
 		} else {
 			if (configuration.getPropertyBoolean(ConfigOption.USE_AUTOSWITCH) && autoSwitch != null && entity instanceof EntityLivingBase) {
 				try {
@@ -96,8 +84,7 @@ public class MobAura extends ThebombzenAPIBaseMod implements ITickHandler {
 			mc.playerController.attackEntity(mc.thePlayer, entity);
 		}
 		if (entity instanceof EntityLivingBase) {
-			hurtResistantTimes.put((EntityLivingBase) entity,
-					((EntityLivingBase) entity).maxHurtResistantTime);
+			hurtResistantTimes.put((EntityLivingBase)entity, ((EntityLivingBase) entity).maxHurtResistantTime);
 		}
 	}
 
@@ -115,11 +102,11 @@ public class MobAura extends ThebombzenAPIBaseMod implements ITickHandler {
 			shouldAttack = false;
 		}
 
-		if (shouldAttack && entity.isDead) {
+		if (entity.isDead) {
 			shouldAttack = false;
 		}
 
-		if (shouldAttack && mc.thePlayer.isDead) {
+		if (mc.thePlayer.isDead) {
 			shouldAttack = false;
 		}
 
@@ -151,28 +138,34 @@ public class MobAura extends ThebombzenAPIBaseMod implements ITickHandler {
 		case TAMEABLE_OWNED:
 			return false;
 		case MOB:
-			return configuration.getPropertyBoolean(ConfigOption.ATTACK_MOBS);
+			return configuration.getPropertyBoolean(ConfigOption.HOSTILE_MOBS);
 		case FARM_ANIMAL:
 			return configuration
-					.getPropertyBoolean(ConfigOption.ATTACK_ANIMALS);
+					.getPropertyBoolean(ConfigOption.FARM_ANIMALS);
 		case WATER_ANIMAL:
-			return configuration.getPropertyBoolean(ConfigOption.ATTACK_WATER);
+			return configuration.getPropertyBoolean(ConfigOption.WATER_CREATURES);
 		case OTHER_LIVING:
-			return configuration.getPropertyBoolean(ConfigOption.ATTACK_LIVING);
+			return configuration.getPropertyBoolean(ConfigOption.OTHER_LIVING_ENTITIES);
 		case TAMEABLE_UNOWNED:
 			return configuration
-					.getPropertyBoolean(ConfigOption.ATTACK_TAMEABLE);
+					.getPropertyBoolean(ConfigOption.TAMEABLE_ENTITIES);
 		case FIREBALL:
 			return configuration
-					.getPropertyBoolean(ConfigOption.ATTACK_FIREBALL);
+					.getPropertyBoolean(ConfigOption.DEFLECT_FIREBALLS);
 		case NPC:
-			return configuration.getPropertyBoolean(ConfigOption.ATTACK_NPC);
+			return configuration.getPropertyBoolean(ConfigOption.NPCS);
 		default:
 			return false;
 		}
 	}
 
-	public void clientTick() {
+	@SubscribeEvent
+	public void clientTick(ClientTickEvent event) {
+		
+		if (!event.phase.equals(TickEvent.Phase.END)){
+			return;
+		}
+		
 		Iterator<Entry<EntityLivingBase, Integer>> iterator = hurtResistantTimes
 				.entrySet().iterator();
 		while (iterator.hasNext()) {
@@ -195,7 +188,7 @@ public class MobAura extends ThebombzenAPIBaseMod implements ITickHandler {
 			return;
 		}
 
-		if (!isToggleEnabled(0)) {
+		if (!isToggleEnabled(TOGGLE_INDEX)) {
 			return;
 		}
 
@@ -204,8 +197,10 @@ public class MobAura extends ThebombzenAPIBaseMod implements ITickHandler {
 			attackEntity(entity);
 			return;
 		}
-
+		
+		@SuppressWarnings("unchecked")
 		List<Entity> entities = mc.theWorld.getLoadedEntityList();
+		
 		for (int i = 0; i < entities.size(); i++) {
 			entity = entities.get(i);
 			boolean shouldAttack = canAttackEntity(entity);
@@ -221,13 +216,9 @@ public class MobAura extends ThebombzenAPIBaseMod implements ITickHandler {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public ThebombzenAPIConfigScreen createConfigScreen(GuiScreen base) {
-		return new ConfigScreen(this, base, configuration);
-	}
-
-	@Override
-	public ThebombzenAPIConfiguration<?> getConfiguration() {
+	public Configuration getConfiguration() {
 		return configuration;
 	}
 
@@ -265,18 +256,13 @@ public class MobAura extends ThebombzenAPIBaseMod implements ITickHandler {
 	}
 
 	@Override
-	public String getLabel() {
-		return "thebombzen.mods.mobaura.MobAura";
-	}
-
-	@Override
 	public String getLongName() {
 		return "MobAura";
 	}
 
 	@Override
 	public String getLongVersionString() {
-		return "MobAura v2.5.0 for Minecraft 1.6.4";
+		return "MobAura, version 2.6.0, Minecraft 1.7.2";
 	}
 
 	public Entity getNextAvailableEntityFromQueue() {
@@ -290,11 +276,6 @@ public class MobAura extends ThebombzenAPIBaseMod implements ITickHandler {
 	}
 
 	@Override
-	public int getNumActiveKeys() {
-		return 0;
-	}
-
-	@Override
 	public int getNumToggleKeys() {
 		return 2;
 	}
@@ -305,9 +286,8 @@ public class MobAura extends ThebombzenAPIBaseMod implements ITickHandler {
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
 	protected String getToggleMessageString(int index, boolean enabled) {
-		if (index == 0) {
+		if (index == TOGGLE_INDEX) {
 			if (enabled) {
 				return "MobAura is now enabled.";
 			} else {
@@ -327,44 +307,23 @@ public class MobAura extends ThebombzenAPIBaseMod implements ITickHandler {
 	public String getVersionFileURLString() {
 		return "https://dl.dropboxusercontent.com/u/51080973/MobAura/MAVersion.txt";
 	}
-
+	
 	@Override
-	public boolean hasConfigScreen() {
-		return true;
-	}
-
-	@EventHandler
-	public void load(FMLInitializationEvent event) {
-		TickRegistry.registerTickHandler(this, Side.CLIENT);
-	}
-
-	@Override
-	@EventHandler
-	public void preInit(FMLPreInitializationEvent event) {
-		super.preInit(event);
+	public void init1(FMLPreInitializationEvent event){
+		FMLCommonHandler.instance().bus().register(this);
+		configuration = new Configuration(this);
 	}
 	
-	@EventHandler
-	public void postInit(FMLPostInitializationEvent event){
-		autoSwitch = Loader.instance().getModObjectList().get(Loader.instance().getIndexedModList().get("AutoSwitch"));
+	public void init3(FMLPostInitializationEvent event){
+		autoSwitch = Loader.instance().getModObjectList().get(Loader.instance().getIndexedModList().get("autoswitch"));
 		if (autoSwitch != null){
 			System.out.println("MobAura has found AutoSwitch!");
 		}
 	}
 
 	@Override
-	public void tickEnd(EnumSet<TickType> type, Object... tickData) {
-		clientTick();
-	}
-
-	@Override
-	public EnumSet<TickType> ticks() {
-		return EnumSet.of(TickType.CLIENT);
-	}
-
-	@Override
-	public void tickStart(EnumSet<TickType> type, Object... tickData) {
-
+	public String getDownloadLocationURLString() {
+		return "http://is.gd/ThebombzensMods#MobAura";
 	}
 
 }

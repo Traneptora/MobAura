@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
@@ -25,85 +27,43 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 
-	public static final int CONFIG_VERSION = 0;
+	public static final int CONFIG_VERSION = 1;
 	private final String defaultConfig;
 
 	private File extraConfigFile;
 	private long extraConfigLastModified;
 
-	private Set<Integer> alwaysAttack = new HashSet<Integer>();
-	private Set<Integer> neverAttack = new HashSet<Integer>();
+	private Set<String> alwaysAttack = new HashSet<String>();
+	private Set<String> neverAttack = new HashSet<String>();
 	private Set<String> playersAvoid = new HashSet<String>();
 	private boolean enablePlayers = false;
 
-	public Configuration(MobAura mod) {
-		super(mod, ConfigOption.class);
-		extraConfigFile = new File(new File(
-				ThebombzenAPI.proxy.getMinecraftFolder(), "config"),
-				"MobAura_Overrides.cfg");
-		StringBuilder dcb = new StringBuilder();
-		dcb.append(
-				"# Use this file to override whether MobAura will attack a particular entity")
-				.append(ThebombzenAPI.newLine);
-		dcb.append("").append(ThebombzenAPI.newLine);
-		dcb.append("# Lines beginning with # are ignored").append(
-				ThebombzenAPI.newLine);
-		dcb.append("").append(ThebombzenAPI.newLine);
-		dcb.append("# Config version number:").append(ThebombzenAPI.newLine);
-		dcb.append(
-				"# If this is not found or does not match the current number, MobAura will replace your config with the default one.")
-				.append(ThebombzenAPI.newLine);
-		dcb.append("R0").append(ThebombzenAPI.newLine);
-		dcb.append("").append(ThebombzenAPI.newLine);
-		dcb.append("# ==== HOW TO SPECIFY ENTITES ====").append(
-				ThebombzenAPI.newLine);
-		dcb.append("").append(ThebombzenAPI.newLine);
-		dcb.append("# Use the entity's NETWORK ID").append(
-				ThebombzenAPI.newLine);
-		dcb.append("# Network IDs can be found on the Minecraft Wiki").append(
-				ThebombzenAPI.newLine);
-		dcb.append(
-				"# For entities from mods, ask your mod author to provide the network IDS")
-				.append(ThebombzenAPI.newLine);
-		dcb.append("").append(ThebombzenAPI.newLine);
-		dcb.append(
-				"# Note that the Network ID is the same as the damage value on the spawn egg")
-				.append(ThebombzenAPI.newLine);
-		dcb.append("# A pig spawn egg is 383:90, so a Pig's Network ID is 90")
-				.append(ThebombzenAPI.newLine);
-		dcb.append(
-				"# Sure enough, on the Pig article on the Minecraft Wiki, it lists ")
-				.append(ThebombzenAPI.newLine);
-		dcb.append("# 90 as the Network ID").append(ThebombzenAPI.newLine);
-		dcb.append("").append(ThebombzenAPI.newLine);
-		dcb.append("").append(ThebombzenAPI.newLine);
-		dcb.append("# =========== OVERRIDES ==========").append(
-				ThebombzenAPI.newLine);
-		dcb.append("").append(ThebombzenAPI.newLine);
-		dcb.append("# Use").append(ThebombzenAPI.newLine);
-		dcb.append("# + ID").append(ThebombzenAPI.newLine);
-		dcb.append(
-				"# to tell MobAura to always attack a particular entity. For example,")
-				.append(ThebombzenAPI.newLine);
-		dcb.append("# to tell MobAura to always attack zombies").append(
-				ThebombzenAPI.newLine);
-		dcb.append("# even if attacking hostile mobs is off, use").append(
-				ThebombzenAPI.newLine);
-		dcb.append("# + 54").append(ThebombzenAPI.newLine);
-		dcb.append("# Similarly, use").append(ThebombzenAPI.newLine);
-		dcb.append("# - ID").append(ThebombzenAPI.newLine);
-		dcb.append(
-				"# to tell MobAura to never attack a particular entity. For example,")
-				.append(ThebombzenAPI.newLine);
-		dcb.append("# - 90").append(ThebombzenAPI.newLine);
-		dcb.append("# tells MobAura to never attack pigs.").append(
-				ThebombzenAPI.newLine);
-		dcb.append("").append(ThebombzenAPI.newLine);
-		dcb.append("# Place MobAura Overrides here (without the #) ").append(
-				ThebombzenAPI.newLine);
-		dcb.append("").append(ThebombzenAPI.newLine);
-		dcb.append("").append(ThebombzenAPI.newLine);
-		defaultConfig = dcb.toString();
+	public Configuration(MobAura mobAura) {
+		super(mobAura, ConfigOption.class);
+		extraConfigFile = new File(ThebombzenAPI.sideSpecificUtilities.getMinecraftDirectory() + File.separator + "config" + File.separator + "MobAura_Overrides.txt");
+		File oldExtraConfigFile = new File(extraConfigFile.getParentFile(), "MobAura_Overrides.cfg");
+		StringBuilder builder = new StringBuilder();
+		try {
+			BufferedReader reader = new BufferedReader(new InputStreamReader(ThebombzenAPI.getResourceAsStream(mobAura, "MobAura_Overrides.txt")));
+			String line;
+			while (null != (line = reader.readLine())){
+				builder.append(line).append(ThebombzenAPI.newLine);
+			}
+			reader.close();
+		} catch (IOException ioe){
+			mobAura.throwException("Could not read default config!", ioe, true);
+		} finally {
+			defaultConfig = builder.toString();
+		}
+		if (oldExtraConfigFile.exists()){
+			try {
+				PrintWriter w = new PrintWriter(new FileWriter(oldExtraConfigFile));
+				w.println("The AutoSwitch overrides file has moved to AutoSwitch_Overrides.txt");
+				w.close();
+			} catch (IOException ioe){
+				mobAura.throwException("Failed to fix redirect old config.", ioe, false);
+			}
+		}
 	}
 
 	public File getExtraConfigFile() {
@@ -139,6 +99,7 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 	protected void parseConfig(String config) {
 		alwaysAttack.clear();
 		neverAttack.clear();
+		playersAvoid.clear();
 		Scanner s = new Scanner(config);
 		s.useDelimiter(ThebombzenAPI.newLine);
 		int version = -1;
@@ -178,30 +139,10 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 				}
 			} else if (first == '+') {
 				String sub = line.substring(1);
-				int id = -1;
-				try {
-					id = Integer.parseInt(sub);
-				} catch (NumberFormatException nfe) {
-
-				}
-				if (id > 0) {
-					alwaysAttack.add(id);
-				} else {
-					System.err.println("Error on line: " + line);
-				}
+				alwaysAttack.add(sub);
 			} else if (first == '-') {
 				String sub = line.substring(1);
-				int id = -1;
-				try {
-					id = Integer.parseInt(sub);
-				} catch (NumberFormatException nfe) {
-
-				}
-				if (id > 0) {
-					neverAttack.add(id);
-				} else {
-					System.err.println("Error on line: " + line);
-				}
+				neverAttack.add(sub);
 			} else if (first == 'K') {
 				enablePlayers = true;
 				String sub = line.substring(1);
@@ -241,7 +182,7 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 		if (entity instanceof EntityPlayer) {
 			if (enablePlayers) {
 				for (String name : playersAvoid) {
-					if (name.equalsIgnoreCase(((EntityPlayer) entity).username)) {
+					if (name.equalsIgnoreCase(((EntityPlayer) entity).getCommandSenderName())) {
 						return false;
 					}
 				}
@@ -250,8 +191,8 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 				return false;
 			}
 		}
-		int id = EntityList.getEntityID(entity);
-		if (alwaysAttack.contains(id)) {
+		String name = EntityList.getEntityString(entity);
+		if (alwaysAttack.contains(name)) {
 			return true;
 		} else {
 			return false;
@@ -262,7 +203,7 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 		if (entity instanceof EntityPlayer) {
 			if (enablePlayers) {
 				for (String name : playersAvoid) {
-					if (name.equalsIgnoreCase(((EntityPlayer) entity).username)) {
+					if (name.equalsIgnoreCase(((EntityPlayer) entity).getCommandSenderName())) {
 						return true;
 					}
 				}
@@ -271,8 +212,8 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 				return true;
 			}
 		}
-		int id = EntityList.getEntityID(entity);
-		if (neverAttack.contains(id)) {
+		String name = EntityList.getEntityString(entity);
+		if (neverAttack.contains(name)) {
 			return true;
 		} else {
 			return false;

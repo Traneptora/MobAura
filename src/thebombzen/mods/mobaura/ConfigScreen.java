@@ -12,9 +12,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class ConfigScreen extends ThebombzenAPIConfigScreen {
 
-	public ConfigScreen(MobAura mod, GuiScreen parentScreen,
-			Configuration config) {
-		super(mod, parentScreen, config);
+	public ConfigScreen(GuiScreen parentScreen) {
+		super(MobAura.instance, parentScreen, MobAura.instance.getConfiguration());
 	}
 
 	@Override
@@ -22,14 +21,18 @@ public class ConfigScreen extends ThebombzenAPIConfigScreen {
 		super.actionPerformed(button);
 		if (button.id == 4911) {
 			try {
-				Desktop.getDesktop().open(
-						((Configuration) config).getExtraConfigFile());
+				try {
+					Desktop.getDesktop().edit(((Configuration)config).getExtraConfigFile());
+				} catch (UnsupportedOperationException e){
+					Desktop.getDesktop().open(((Configuration)config).getExtraConfigFile());
+				}
 			} catch (IOException e) {
 				mod.throwException("Unable to open file!", e, false);
 			}
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void initGui() {
 		super.initGui();
