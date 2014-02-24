@@ -239,5 +239,9 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 		writer.close();
 		extraConfigLastModified = getExtraConfigFile().lastModified();
 	}
+	
+	public boolean shouldUseSafeMode(){
+		return (getProperty(ConfigOption.SAFETY_LEVEL).equalsIgnoreCase("Safe")) || getProperty(ConfigOption.SAFETY_LEVEL).equalsIgnoreCase("Normal") && !Minecraft.getMinecraft().isSingleplayer();
+	}
 
 }

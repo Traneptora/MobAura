@@ -36,8 +36,9 @@ public class ConfigScreen extends ThebombzenAPIConfigScreen {
 	@Override
 	public void initGui() {
 		super.initGui();
-		this.buttonList.add(new GuiButton(4911, this.width / 2 - 100,
-				this.height / 6 + 140, 200, 20,
+		int i = buttonList.size() - 1;
+		this.buttonList.add(new GuiButton(4911, width / 2 - 206 + (i & 1) * 207,
+				height / 6 + 23 * (i >> 1) - 18, 205, 20,
 				"Open MobAura Overrides File..."));
 	}
 

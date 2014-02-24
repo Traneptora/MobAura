@@ -45,7 +45,29 @@ public enum ConfigOption implements ThebombzenAPIConfigOption {
 	USE_AUTOSWITCH(-1, BOOLEAN, "true", "Use AutoSwitch",
 		"Use AutoSwitch to switch weapons",
 		"when MobAura attacks a mob",
-		"(but not when interacting).");
+		"(but not when interacting)."),
+	SAFETY_LEVEL(-1, FINITE_STRING, "Normal", "Safety Level",
+		"The level of safety that MobAura uses.",
+		"",
+		"Safe-mode makes MobAura wait 1/2 second",
+		"between attacks and also only attack",
+		"one entity at a time. (Or interact, etc.)",
+		"",
+		"\"Normal\" enables safe-mode in multiplayer",
+		"but disables it in singleplayer.",
+		"\"Safe\" enables safe-mode in both",
+		"and \"Dangerous\" disables safe-mode in both.",
+		"",
+		"Use \"Safe\" if you feel like \"Normal\" is cheating."),
+	USE_IN_GUI(-1, BOOLEAN, "false", "Use in GUI",
+		"Use MobAura when a GUI Screen is open."),
+	IGNORE_HURT_TIMERS(-1, BOOLEAN, "false", "Ignore Hurt Timers",
+		"Ignore \"Hurt Resistant Timers\".",
+		"Normally an entity gains attack resistance",
+		"right after it is hurt. Some mods bypass this.",
+		"MobAura normally refrains from attacking during",
+		"this time. Turn on to disable this feature.");
+	;
 
 	private int defaultToggleIndex;
 
@@ -75,6 +97,9 @@ public enum ConfigOption implements ThebombzenAPIConfigOption {
 
 	@Override
 	public String[] getFiniteStringOptions() {
+		if (this == SAFETY_LEVEL){
+			return new String[]{"Safe", "Normal", "Dangerous"};
+		}
 		throw new UnsupportedOperationException(
 				"Only supported for Finite Strings!");
 	}

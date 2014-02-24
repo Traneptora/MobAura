@@ -1,6 +1,7 @@
 package thebombzen.mods.mobaura;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -111,6 +112,7 @@ public class MobAura extends ThebombzenAPIBaseMod {
 		}
 
 		if (shouldAttack
+				&& !configuration.getPropertyBoolean(ConfigOption.IGNORE_HURT_TIMERS)
 				&& entity instanceof EntityLivingBase
 				&& hurtResistantTimes.containsKey(entity)
 				&& hurtResistantTimes.get(entity) > ((EntityLivingBase) entity).maxHurtResistantTime / 2.0F) {
@@ -166,6 +168,12 @@ public class MobAura extends ThebombzenAPIBaseMod {
 			return;
 		}
 		
+		if (mc.theWorld == null){
+			hurtResistantTimes.clear();
+			entityQueue.clear();
+			return;
+		}
+		
 		Iterator<Entry<EntityLivingBase, Integer>> iterator = hurtResistantTimes
 				.entrySet().iterator();
 		while (iterator.hasNext()) {
@@ -179,12 +187,12 @@ public class MobAura extends ThebombzenAPIBaseMod {
 		}
 
 		ticks++;
-
-		if (mc.currentScreen != null) {
+		
+		if (mc.currentScreen != null && !configuration.getPropertyBoolean(ConfigOption.USE_IN_GUI)) {
 			return;
 		}
 
-		if (ticks % 10 != 0) {
+		if (ticks % (configuration.shouldUseSafeMode() ? 10 : 2) != 0) {
 			return;
 		}
 
@@ -192,28 +200,37 @@ public class MobAura extends ThebombzenAPIBaseMod {
 			return;
 		}
 
-		Entity entity = getNextAvailableEntityFromQueue();
-		if (entity != null) {
-			attackEntity(entity);
-			return;
+		if (configuration.shouldUseSafeMode()){
+			Entity entity = getNextAvailableEntityFromQueue();
+			if (entity != null) {
+				attackEntity(entity);
+				return;
+			}
 		}
 		
 		@SuppressWarnings("unchecked")
 		List<Entity> entities = mc.theWorld.getLoadedEntityList();
 		
 		for (int i = 0; i < entities.size(); i++) {
-			entity = entities.get(i);
+			Entity entity = entities.get(i);
 			boolean shouldAttack = canAttackEntity(entity);
 			if (shouldAttack) {
 				entityQueue.offer(entity);
 			}
 		}
 
-		entity = getNextAvailableEntityFromQueue();
-		if (entity != null) {
-			attackEntity(entity);
-			return;
+		while (true){
+			Entity entity = getNextAvailableEntityFromQueue();
+			if (entity != null) {
+				attackEntity(entity);
+				if (configuration.shouldUseSafeMode()){
+					break;
+				}
+			} else {
+				break;
+			}
 		}
+		
 	}
 
 	@SuppressWarnings("unchecked")
@@ -312,6 +329,7 @@ public class MobAura extends ThebombzenAPIBaseMod {
 	public void init1(FMLPreInitializationEvent event){
 		FMLCommonHandler.instance().bus().register(this);
 		configuration = new Configuration(this);
+		FMLCommonHandler.instance().findContainerFor(this).getMetadata().authorList = Arrays.asList("Thebombzen");
 	}
 	
 	public void init3(FMLPostInitializationEvent event){
