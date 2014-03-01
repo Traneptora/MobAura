@@ -58,24 +58,32 @@ public class MobAura extends ThebombzenAPIBaseMod {
 
 	public static final int FIREBALL = 8;
 	public static final int NPC = 9;
-	
-	public static final int INTERACT_TOGGLE_INDEX = ConfigOption.DEFAULT_INTERACT.getDefaultToggleIndex();
-	public static final int TOGGLE_INDEX = ConfigOption.DEFAULT_ENABLED.getDefaultToggleIndex();
+
+	public static final int INTERACT_TOGGLE_INDEX = ConfigOption.DEFAULT_INTERACT
+			.getDefaultToggleIndex();
+	public static final int TOGGLE_INDEX = ConfigOption.DEFAULT_ENABLED
+			.getDefaultToggleIndex();
 
 	@Instance("mobaura")
 	public static MobAura instance;
-	
+
 	public static Object autoSwitch;
 
 	private Configuration configuration;
 
 	public void attackEntity(Entity entity) {
-		if (isToggleEnabled(INTERACT_TOGGLE_INDEX) && !(entity instanceof EntityFireball)) {
-			mc.playerController.interactWithEntitySendPacket(mc.thePlayer, entity);
+		if (isToggleEnabled(INTERACT_TOGGLE_INDEX)
+				&& !(entity instanceof EntityFireball)) {
+			mc.playerController.interactWithEntitySendPacket(mc.thePlayer,
+					entity);
 		} else {
-			if (configuration.getPropertyBoolean(ConfigOption.USE_AUTOSWITCH) && autoSwitch != null && entity instanceof EntityLivingBase) {
+			if (configuration.getPropertyBoolean(ConfigOption.USE_AUTOSWITCH)
+					&& autoSwitch != null && entity instanceof EntityLivingBase) {
 				try {
-					autoSwitch.getClass().getMethod("potentiallySwitchWeapons", EntityLivingBase.class)
+					autoSwitch
+							.getClass()
+							.getMethod("potentiallySwitchWeapons",
+									EntityLivingBase.class)
 							.invoke(autoSwitch, entity);
 				} catch (Exception e) {
 					throwException("Error switching with AutoSwitch.", e, false);
@@ -85,7 +93,8 @@ public class MobAura extends ThebombzenAPIBaseMod {
 			mc.playerController.attackEntity(mc.thePlayer, entity);
 		}
 		if (entity instanceof EntityLivingBase) {
-			hurtResistantTimes.put((EntityLivingBase)entity, ((EntityLivingBase) entity).maxHurtResistantTime);
+			hurtResistantTimes.put((EntityLivingBase) entity,
+					((EntityLivingBase) entity).maxHurtResistantTime);
 		}
 	}
 
@@ -112,7 +121,8 @@ public class MobAura extends ThebombzenAPIBaseMod {
 		}
 
 		if (shouldAttack
-				&& !configuration.getPropertyBoolean(ConfigOption.IGNORE_HURT_TIMERS)
+				&& !configuration
+						.getPropertyBoolean(ConfigOption.IGNORE_HURT_TIMERS)
 				&& entity instanceof EntityLivingBase
 				&& hurtResistantTimes.containsKey(entity)
 				&& hurtResistantTimes.get(entity) > ((EntityLivingBase) entity).maxHurtResistantTime / 2.0F) {
@@ -142,12 +152,13 @@ public class MobAura extends ThebombzenAPIBaseMod {
 		case MOB:
 			return configuration.getPropertyBoolean(ConfigOption.HOSTILE_MOBS);
 		case FARM_ANIMAL:
-			return configuration
-					.getPropertyBoolean(ConfigOption.FARM_ANIMALS);
+			return configuration.getPropertyBoolean(ConfigOption.FARM_ANIMALS);
 		case WATER_ANIMAL:
-			return configuration.getPropertyBoolean(ConfigOption.WATER_CREATURES);
+			return configuration
+					.getPropertyBoolean(ConfigOption.WATER_CREATURES);
 		case OTHER_LIVING:
-			return configuration.getPropertyBoolean(ConfigOption.OTHER_LIVING_ENTITIES);
+			return configuration
+					.getPropertyBoolean(ConfigOption.OTHER_LIVING_ENTITIES);
 		case TAMEABLE_UNOWNED:
 			return configuration
 					.getPropertyBoolean(ConfigOption.TAMEABLE_ENTITIES);
@@ -163,17 +174,17 @@ public class MobAura extends ThebombzenAPIBaseMod {
 
 	@SubscribeEvent
 	public void clientTick(ClientTickEvent event) {
-		
-		if (!event.phase.equals(TickEvent.Phase.END)){
+
+		if (!event.phase.equals(TickEvent.Phase.END)) {
 			return;
 		}
-		
-		if (mc.theWorld == null){
+
+		if (mc.theWorld == null) {
 			hurtResistantTimes.clear();
 			entityQueue.clear();
 			return;
 		}
-		
+
 		Iterator<Entry<EntityLivingBase, Integer>> iterator = hurtResistantTimes
 				.entrySet().iterator();
 		while (iterator.hasNext()) {
@@ -187,8 +198,9 @@ public class MobAura extends ThebombzenAPIBaseMod {
 		}
 
 		ticks++;
-		
-		if (mc.currentScreen != null && !configuration.getPropertyBoolean(ConfigOption.USE_IN_GUI)) {
+
+		if (mc.currentScreen != null
+				&& !configuration.getPropertyBoolean(ConfigOption.USE_IN_GUI)) {
 			return;
 		}
 
@@ -200,17 +212,17 @@ public class MobAura extends ThebombzenAPIBaseMod {
 			return;
 		}
 
-		if (configuration.shouldUseSafeMode()){
+		if (configuration.shouldUseSafeMode()) {
 			Entity entity = getNextAvailableEntityFromQueue();
 			if (entity != null) {
 				attackEntity(entity);
 				return;
 			}
 		}
-		
+
 		@SuppressWarnings("unchecked")
 		List<Entity> entities = mc.theWorld.getLoadedEntityList();
-		
+
 		for (int i = 0; i < entities.size(); i++) {
 			Entity entity = entities.get(i);
 			boolean shouldAttack = canAttackEntity(entity);
@@ -219,24 +231,29 @@ public class MobAura extends ThebombzenAPIBaseMod {
 			}
 		}
 
-		while (true){
+		while (true) {
 			Entity entity = getNextAvailableEntityFromQueue();
 			if (entity != null) {
 				attackEntity(entity);
-				if (configuration.shouldUseSafeMode()){
+				if (configuration.shouldUseSafeMode()) {
 					break;
 				}
 			} else {
 				break;
 			}
 		}
-		
+
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public Configuration getConfiguration() {
 		return configuration;
+	}
+
+	@Override
+	public String getDownloadLocationURLString() {
+		return "http://is.gd/ThebombzensMods#MobAura";
 	}
 
 	public int getEntityType(Entity entity) {
@@ -324,24 +341,22 @@ public class MobAura extends ThebombzenAPIBaseMod {
 	public String getVersionFileURLString() {
 		return "https://dl.dropboxusercontent.com/u/51080973/MobAura/MAVersion.txt";
 	}
-	
+
 	@Override
-	public void init1(FMLPreInitializationEvent event){
+	public void init1(FMLPreInitializationEvent event) {
 		FMLCommonHandler.instance().bus().register(this);
 		configuration = new Configuration(this);
-		FMLCommonHandler.instance().findContainerFor(this).getMetadata().authorList = Arrays.asList("Thebombzen");
-	}
-	
-	public void init3(FMLPostInitializationEvent event){
-		autoSwitch = Loader.instance().getModObjectList().get(Loader.instance().getIndexedModList().get("autoswitch"));
-		if (autoSwitch != null){
-			System.out.println("MobAura has found AutoSwitch!");
-		}
+		FMLCommonHandler.instance().findContainerFor(this).getMetadata().authorList = Arrays
+				.asList("Thebombzen");
 	}
 
 	@Override
-	public String getDownloadLocationURLString() {
-		return "http://is.gd/ThebombzensMods#MobAura";
+	public void init3(FMLPostInitializationEvent event) {
+		autoSwitch = Loader.instance().getModObjectList()
+				.get(Loader.instance().getIndexedModList().get("autoswitch"));
+		if (autoSwitch != null) {
+			System.out.println("MobAura has found AutoSwitch!");
+		}
 	}
 
 }

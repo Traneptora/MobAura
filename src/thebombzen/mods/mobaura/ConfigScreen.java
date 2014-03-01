@@ -13,7 +13,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class ConfigScreen extends ThebombzenAPIConfigScreen {
 
 	public ConfigScreen(GuiScreen parentScreen) {
-		super(MobAura.instance, parentScreen, MobAura.instance.getConfiguration());
+		super(MobAura.instance, parentScreen, MobAura.instance
+				.getConfiguration());
 	}
 
 	@Override
@@ -22,9 +23,11 @@ public class ConfigScreen extends ThebombzenAPIConfigScreen {
 		if (button.id == 4911) {
 			try {
 				try {
-					Desktop.getDesktop().edit(((Configuration)config).getExtraConfigFile());
-				} catch (UnsupportedOperationException e){
-					Desktop.getDesktop().open(((Configuration)config).getExtraConfigFile());
+					Desktop.getDesktop().edit(
+							((Configuration) config).getExtraConfigFile());
+				} catch (UnsupportedOperationException e) {
+					Desktop.getDesktop().open(
+							((Configuration) config).getExtraConfigFile());
 				}
 			} catch (IOException e) {
 				mod.throwException("Unable to open file!", e, false);
@@ -37,9 +40,9 @@ public class ConfigScreen extends ThebombzenAPIConfigScreen {
 	public void initGui() {
 		super.initGui();
 		int i = buttonList.size() - 1;
-		this.buttonList.add(new GuiButton(4911, width / 2 - 206 + (i & 1) * 207,
-				height / 6 + 23 * (i >> 1) - 18, 205, 20,
-				"Open MobAura Overrides File..."));
+		this.buttonList.add(new GuiButton(4911,
+				width / 2 - 206 + (i & 1) * 207, height / 6 + 23 * (i >> 1)
+						- 18, 205, 20, "Open MobAura Overrides File..."));
 	}
 
 }

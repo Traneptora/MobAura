@@ -1,9 +1,9 @@
 package thebombzen.mods.mobaura;
 
+import net.minecraft.util.EnumChatFormatting;
 import thebombzen.mods.thebombzenapi.ThebombzenAPIConfigOption;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-
 @SideOnly(Side.CLIENT)
 public enum ConfigOption implements ThebombzenAPIConfigOption {
 
@@ -66,7 +66,10 @@ public enum ConfigOption implements ThebombzenAPIConfigOption {
 		"Normally an entity gains attack resistance",
 		"right after it is hurt. Some mods bypass this.",
 		"MobAura normally refrains from attacking during",
-		"this time. Turn on to disable this feature.");
+		"this time. Turn on to disable this feature.",
+		"",
+		EnumChatFormatting.RED + "WARNING!" + EnumChatFormatting.RESET + " May have highly undesirable results",
+		"if this is ON and MobAura is interacting.");
 	;
 
 	private int defaultToggleIndex;

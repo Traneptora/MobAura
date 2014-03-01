@@ -40,28 +40,36 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 
 	public Configuration(MobAura mobAura) {
 		super(mobAura, ConfigOption.class);
-		extraConfigFile = new File(ThebombzenAPI.sideSpecificUtilities.getMinecraftDirectory() + File.separator + "config" + File.separator + "MobAura_Overrides.txt");
-		File oldExtraConfigFile = new File(extraConfigFile.getParentFile(), "MobAura_Overrides.cfg");
+		extraConfigFile = new File(
+				ThebombzenAPI.sideSpecificUtilities.getMinecraftDirectory()
+						+ File.separator + "config" + File.separator
+						+ "MobAura_Overrides.txt");
+		File oldExtraConfigFile = new File(extraConfigFile.getParentFile(),
+				"MobAura_Overrides.cfg");
 		StringBuilder builder = new StringBuilder();
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(ThebombzenAPI.getResourceAsStream(mobAura, "MobAura_Overrides.txt")));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					ThebombzenAPI.getResourceAsStream(mobAura,
+							"MobAura_Overrides.txt")));
 			String line;
-			while (null != (line = reader.readLine())){
+			while (null != (line = reader.readLine())) {
 				builder.append(line).append(ThebombzenAPI.newLine);
 			}
 			reader.close();
-		} catch (IOException ioe){
+		} catch (IOException ioe) {
 			mobAura.throwException("Could not read default config!", ioe, true);
 		} finally {
 			defaultConfig = builder.toString();
 		}
-		if (oldExtraConfigFile.exists()){
+		if (oldExtraConfigFile.exists()) {
 			try {
-				PrintWriter w = new PrintWriter(new FileWriter(oldExtraConfigFile));
+				PrintWriter w = new PrintWriter(new FileWriter(
+						oldExtraConfigFile));
 				w.println("The AutoSwitch overrides file has moved to AutoSwitch_Overrides.txt");
 				w.close();
-			} catch (IOException ioe){
-				mobAura.throwException("Failed to fix redirect old config.", ioe, false);
+			} catch (IOException ioe) {
+				mobAura.throwException("Failed to fix redirect old config.",
+						ioe, false);
 			}
 		}
 	}
@@ -118,7 +126,7 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 				continue;
 			}
 			char first = line.charAt(0);
-			if (first == 'R') {
+			if (first == 'R' || first == 'r') {
 				String sub = line.substring(1);
 				try {
 					version = Integer.parseInt(sub);
@@ -143,7 +151,7 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 			} else if (first == '-') {
 				String sub = line.substring(1);
 				neverAttack.add(sub);
-			} else if (first == 'K') {
+			} else if (first == 'K' || first == 'k') {
 				enablePlayers = true;
 				String sub = line.substring(1);
 				playersAvoid.add(Minecraft.getMinecraft().getSession()
@@ -182,7 +190,8 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 		if (entity instanceof EntityPlayer) {
 			if (enablePlayers) {
 				for (String name : playersAvoid) {
-					if (name.equalsIgnoreCase(((EntityPlayer) entity).getCommandSenderName())) {
+					if (name.equalsIgnoreCase(((EntityPlayer) entity)
+							.getCommandSenderName())) {
 						return false;
 					}
 				}
@@ -203,7 +212,8 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 		if (entity instanceof EntityPlayer) {
 			if (enablePlayers) {
 				for (String name : playersAvoid) {
-					if (name.equalsIgnoreCase(((EntityPlayer) entity).getCommandSenderName())) {
+					if (name.equalsIgnoreCase(((EntityPlayer) entity)
+							.getCommandSenderName())) {
 						return true;
 					}
 				}
@@ -232,16 +242,18 @@ public class Configuration extends ThebombzenAPIConfiguration<ConfigOption> {
 		}
 	}
 
+	public boolean shouldUseSafeMode() {
+		return (getProperty(ConfigOption.SAFETY_LEVEL).equalsIgnoreCase("Safe"))
+				|| getProperty(ConfigOption.SAFETY_LEVEL).equalsIgnoreCase(
+						"Normal") && !Minecraft.getMinecraft().isSingleplayer();
+	}
+
 	private void writeExtraConfig() throws IOException {
 		FileWriter writer = new FileWriter(extraConfigFile);
 		writer.write(defaultConfig);
 		writer.flush();
 		writer.close();
 		extraConfigLastModified = getExtraConfigFile().lastModified();
-	}
-	
-	public boolean shouldUseSafeMode(){
-		return (getProperty(ConfigOption.SAFETY_LEVEL).equalsIgnoreCase("Safe")) || getProperty(ConfigOption.SAFETY_LEVEL).equalsIgnoreCase("Normal") && !Minecraft.getMinecraft().isSingleplayer();
 	}
 
 }
