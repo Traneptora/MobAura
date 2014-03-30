@@ -216,6 +216,7 @@ public class MAInstallerFrame extends JFrame {
 
 		this.setLocation((size.width - getWidth()) / 2,
 				(size.height - getHeight()) / 2);
+		
 		dialog = new JDialog(this);
 		dialog.setLayout(new BorderLayout());
 		dialog.add(Box.createVerticalStrut(15), BorderLayout.NORTH);

@@ -40,9 +40,13 @@ public class ConfigScreen extends ThebombzenAPIConfigScreen {
 	public void initGui() {
 		super.initGui();
 		int i = buttonList.size() - 1;
-		this.buttonList.add(new GuiButton(4911,
+		this.buttonList.add(i, new GuiButton(4911,
 				width / 2 - 206 + (i & 1) * 207, height / 6 + 23 * (i >> 1)
 						- 18, 205, 20, "Open MobAura Overrides File..."));
+		((GuiButton)this.buttonList.get(i + 1)).xPosition = width / 2 - 206 + ((i + 1) & 1) * 207;
+		((GuiButton)this.buttonList.get(i + 1)).yPosition = height / 6 + 23 * ((i + 1) >> 1) - 18;
+		//ThebombzenAPI.setPrivateField((GuiButton)this.buttonList.get(i + 1), GuiButton.class, new String[]{"field_146120_f", "f", "width"}, 205);
+		this.buttonList.remove(i + 1);
 	}
 
 }

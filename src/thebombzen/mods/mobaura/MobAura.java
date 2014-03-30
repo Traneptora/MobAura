@@ -33,7 +33,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
-@Mod(modid = "mobaura", name = "MobAura", version = "2.6.0", dependencies = "required-after:thebombzenapi", guiFactory = "thebombzen.mods.mobaura.ConfigGuiFactory")
+@Mod(modid = "mobaura", name = "MobAura", version = "2.7.0pre2", dependencies = "required-after:thebombzenapi", guiFactory = "thebombzen.mods.mobaura.ConfigGuiFactory")
 public class MobAura extends ThebombzenAPIBaseMod {
 
 	private long ticks = 0;
@@ -59,9 +59,9 @@ public class MobAura extends ThebombzenAPIBaseMod {
 	public static final int FIREBALL = 8;
 	public static final int NPC = 9;
 
-	public static final int INTERACT_TOGGLE_INDEX = ConfigOption.DEFAULT_INTERACT
+	public static final int INTERACT_TOGGLE_INDEX = Configuration.DEFAULT_INTERACT
 			.getDefaultToggleIndex();
-	public static final int TOGGLE_INDEX = ConfigOption.DEFAULT_ENABLED
+	public static final int TOGGLE_INDEX = Configuration.DEFAULT_ENABLED
 			.getDefaultToggleIndex();
 
 	@Instance("mobaura")
@@ -77,7 +77,7 @@ public class MobAura extends ThebombzenAPIBaseMod {
 			mc.playerController.interactWithEntitySendPacket(mc.thePlayer,
 					entity);
 		} else {
-			if (configuration.getPropertyBoolean(ConfigOption.USE_AUTOSWITCH)
+			if (configuration.getSingleMultiProperty(Configuration.USE_AUTOSWITCH)
 					&& autoSwitch != null && entity instanceof EntityLivingBase) {
 				try {
 					autoSwitch
@@ -122,7 +122,7 @@ public class MobAura extends ThebombzenAPIBaseMod {
 
 		if (shouldAttack
 				&& !configuration
-						.getPropertyBoolean(ConfigOption.IGNORE_HURT_TIMERS)
+						.getSingleMultiProperty(Configuration.IGNORE_HURT_TIMERS)
 				&& entity instanceof EntityLivingBase
 				&& hurtResistantTimes.containsKey(entity)
 				&& hurtResistantTimes.get(entity) > ((EntityLivingBase) entity).maxHurtResistantTime / 2.0F) {
@@ -139,6 +139,21 @@ public class MobAura extends ThebombzenAPIBaseMod {
 				&& mc.thePlayer.getDistanceSqToEntity(entity) >= distanceSq) {
 			shouldAttack = false;
 		}
+		
+		if (shouldAttack && !configuration.getSingleMultiProperty(Configuration.ATTACK_FROM_BEHIND)){
+			double diffX = entity.posX - mc.thePlayer.posX;
+			double diffZ = entity.posZ - mc.thePlayer.posZ;
+			double diffY = entity.posY - mc.thePlayer.posY;
+			
+			double headLookX = -Math.sin(mc.thePlayer.rotationYawHead * Math.PI / 180);
+			double headLookZ = Math.cos(mc.thePlayer.rotationYawHead * Math.PI / 180);
+			double headLookY = -Math.sin(mc.thePlayer.rotationPitch * Math.PI / 180);
+			
+			double diffAngle = Math.acos((diffX * headLookX + diffZ * headLookZ + diffY * headLookY) / Math.sqrt((diffX * diffX + diffY * diffY + diffZ * diffZ) * (headLookX * headLookX + headLookY * headLookY + headLookZ * headLookZ)));
+			if (diffAngle > 0.5D * Math.PI){
+				shouldAttack = false;
+			}	
+		}
 
 		return shouldAttack;
 	}
@@ -150,23 +165,23 @@ public class MobAura extends ThebombzenAPIBaseMod {
 		case TAMEABLE_OWNED:
 			return false;
 		case MOB:
-			return configuration.getPropertyBoolean(ConfigOption.HOSTILE_MOBS);
+			return configuration.getSingleMultiProperty(Configuration.HOSTILE_MOBS);
 		case FARM_ANIMAL:
-			return configuration.getPropertyBoolean(ConfigOption.FARM_ANIMALS);
+			return configuration.getSingleMultiProperty(Configuration.FARM_ANIMALS);
 		case WATER_ANIMAL:
 			return configuration
-					.getPropertyBoolean(ConfigOption.WATER_CREATURES);
+					.getSingleMultiProperty(Configuration.WATER_CREATURES);
 		case OTHER_LIVING:
 			return configuration
-					.getPropertyBoolean(ConfigOption.OTHER_LIVING_ENTITIES);
+					.getSingleMultiProperty(Configuration.OTHER_LIVING_ENTITIES);
 		case TAMEABLE_UNOWNED:
 			return configuration
-					.getPropertyBoolean(ConfigOption.TAMEABLE_ENTITIES);
+					.getSingleMultiProperty(Configuration.TAMEABLE_ENTITIES);
 		case FIREBALL:
 			return configuration
-					.getPropertyBoolean(ConfigOption.DEFLECT_FIREBALLS);
+					.getSingleMultiProperty(Configuration.DEFLECT_FIREBALLS);
 		case NPC:
-			return configuration.getPropertyBoolean(ConfigOption.NPCS);
+			return configuration.getSingleMultiProperty(Configuration.NPCS);
 		default:
 			return false;
 		}
@@ -200,11 +215,11 @@ public class MobAura extends ThebombzenAPIBaseMod {
 		ticks++;
 
 		if (mc.currentScreen != null
-				&& !configuration.getPropertyBoolean(ConfigOption.USE_IN_GUI)) {
+				&& !configuration.getSingleMultiProperty(Configuration.USE_IN_GUI)) {
 			return;
 		}
 
-		if (ticks % (configuration.shouldUseSafeMode() ? 10 : 2) != 0) {
+		if (ticks % (configuration.getSingleMultiProperty(Configuration.LARGE_PAUSE) ? 10 : 2) != 0) {
 			return;
 		}
 
@@ -212,7 +227,7 @@ public class MobAura extends ThebombzenAPIBaseMod {
 			return;
 		}
 
-		if (configuration.shouldUseSafeMode()) {
+		if (!configuration.getSingleMultiProperty(Configuration.ATTACK_MULTIPLE)) {
 			Entity entity = getNextAvailableEntityFromQueue();
 			if (entity != null) {
 				attackEntity(entity);
@@ -235,7 +250,7 @@ public class MobAura extends ThebombzenAPIBaseMod {
 			Entity entity = getNextAvailableEntityFromQueue();
 			if (entity != null) {
 				attackEntity(entity);
-				if (configuration.shouldUseSafeMode()) {
+				if (!configuration.getSingleMultiProperty(Configuration.ATTACK_MULTIPLE)) {
 					break;
 				}
 			} else {
@@ -296,7 +311,7 @@ public class MobAura extends ThebombzenAPIBaseMod {
 
 	@Override
 	public String getLongVersionString() {
-		return "MobAura, version 2.6.0, Minecraft 1.7.2";
+		return "MobAura, version 2.7.0pre2, Minecraft 1.7.2";
 	}
 
 	public Entity getNextAvailableEntityFromQueue() {
@@ -339,7 +354,8 @@ public class MobAura extends ThebombzenAPIBaseMod {
 
 	@Override
 	public String getVersionFileURLString() {
-		return "https://dl.dropboxusercontent.com/u/51080973/MobAura/MAVersion.txt";
+		//return "https://dl.dropboxusercontent.com/u/51080973/Mods/MobAura/MAVersion.txt";
+		return "";
 	}
 
 	@Override
