@@ -34,7 +34,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
-@Mod(modid = "mobaura", name = "MobAura", version = "2.7.0pre2", dependencies = "required-after:thebombzenapi", guiFactory = "thebombzen.mods.mobaura.ConfigGuiFactory")
+@Mod(modid = "mobaura", name = "MobAura", version = "2.7.0", dependencies = "required-after:thebombzenapi", guiFactory = "thebombzen.mods.mobaura.ConfigGuiFactory")
 public class MobAura extends ThebombzenAPIBaseMod {
 
 	private long ticks = 0;
@@ -319,7 +319,7 @@ public class MobAura extends ThebombzenAPIBaseMod {
 
 	@Override
 	public String getLongVersionString() {
-		return "MobAura, version 2.7.0pre2, Minecraft 1.7.2";
+		return "MobAura, version 2.7.0, Minecraft 1.7.2";
 	}
 
 	public Entity getNextAvailableEntityFromQueue() {
