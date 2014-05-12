@@ -15,6 +15,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.INpc;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.entity.player.EntityPlayer;
@@ -280,6 +281,13 @@ public class MobAura extends ThebombzenAPIBaseMod {
 		}
 		if (entity instanceof EntityTameable) {
 			if (((EntityTameable) entity).getOwner() != null) {
+				return TAMEABLE_OWNED;
+			} else {
+				return TAMEABLE_UNOWNED;
+			}
+		}
+		if (entity instanceof EntityHorse){
+			if (((EntityHorse)entity).isTame()){
 				return TAMEABLE_OWNED;
 			} else {
 				return TAMEABLE_UNOWNED;
