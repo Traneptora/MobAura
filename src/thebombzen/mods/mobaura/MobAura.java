@@ -362,8 +362,7 @@ public class MobAura extends ThebombzenAPIBaseMod {
 
 	@Override
 	public String getVersionFileURLString() {
-		//return "https://dl.dropboxusercontent.com/u/51080973/Mods/MobAura/MAVersion.txt";
-		return "";
+		return "https://dl.dropboxusercontent.com/u/51080973/Mods/MobAura/MAVersion.txt";
 	}
 
 	@Override
