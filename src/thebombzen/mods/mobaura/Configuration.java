@@ -153,10 +153,10 @@ public class Configuration extends ThebombzenAPIConfiguration {
 		super.loadProperties();
 		MobAura.instance.setToggleKeyCode(
 				DEFAULT_ENABLED.getDefaultToggleIndex(),
-				Keyboard.getKeyIndex(getStringProperty(TOGGLE_KEY)));
+				getKeyCodeProperty(TOGGLE_KEY));
 		MobAura.instance.setToggleKeyCode(
 				DEFAULT_INTERACT.getDefaultToggleIndex(),
-				Keyboard.getKeyIndex(getStringProperty(INTERACT_KEY)));
+				getKeyCodeProperty(INTERACT_KEY));
 		if (!extraConfigFile.exists()) {
 			writeExtraConfig();
 			parseConfig(defaultConfig);
@@ -248,11 +248,11 @@ public class Configuration extends ThebombzenAPIConfiguration {
 		if (option.equals(TOGGLE_KEY)) {
 			mod.setToggleKeyCode(
 					DEFAULT_ENABLED.getDefaultToggleIndex(),
-					Keyboard.getKeyIndex(value));
+					ThebombzenAPI.getExtendedKeyIndex(value));
 		} else if (option.equals(INTERACT_KEY)) {
 			mod.setToggleKeyCode(
 					DEFAULT_INTERACT.getDefaultToggleIndex(),
-					Keyboard.getKeyIndex(value));
+					ThebombzenAPI.getExtendedKeyIndex(value));
 		}
 	}
 
